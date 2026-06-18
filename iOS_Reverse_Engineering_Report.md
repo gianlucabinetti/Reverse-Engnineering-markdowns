@@ -45,36 +45,36 @@
 ## 4. Deep-Dive: Binary Patching Methodologies
 
 ### 4.1 Code Signing Enforcement (`CS_ENFORCE`)
-We analyzed the system's reaction to binary patching by attempting to neutralize the activation check directly within the Mach-O binary.
+I analyzed the system's reaction to binary patching by attempting to neutralize the activation check directly within the Mach-O binary.
 * **Tools:** Ghidra (Disassembler), `ldid` (Code-signing utility).
-* **The Logic:** Used Ghidra to locate the function call `sub_1000045A0` which returns the activation state. We changed the branch condition from `B.NE` (Branch if Not Equal) to `NOP` (No-Operation) in the ARMv8 instruction set.
-* **The Enforcement Mechanism:** The kernel performs `CS_ENFORCE` (Code Signing Enforcement). Every page of the Mach-O binary is hashed and stored in the Kernel Integrity Protection (KIP) table. We attempted to re-sign the binary using `ldid -S`. 
+* **The Logic:** Used Ghidra to locate the function call `sub_1000045A0` which returns the activation state. I changed the branch condition from `B.NE` (Branch if Not Equal) to `NOP` (No-Operation) in the ARMv8 instruction set.
+* **The Enforcement Mechanism:** The kernel performs `CS_ENFORCE` (Code Signing Enforcement). Every page of the Mach-O binary is hashed and stored in the Kernel Integrity Protection (KIP) table. I attempted to re-sign the binary using `ldid -S`. 
 * **Result:** Even a single-bit change in the binary leads to a Page Fault upon execution. The kernel's AMFI (Apple Mobile File Integrity) service performs a page-level hash check. Upon the first instruction fetch, the kernel detected the hash mismatch and terminated the process immediately (`kernel: AMFI: code signature validation failed`).
 
 ### 4.2 The "Albert" Handshake Analysis
-We utilized `tcpdump` to observe the network handshake between the device and Apple's activation servers. The device does not merely check for internet connectivity; it validates an asymmetric cryptographic token.
+I utilized `tcpdump` to observe the network handshake between the device and Apple's activation servers. The device does not merely check for internet connectivity; it validates an asymmetric cryptographic token.
 * **Token Structure:** The activation record contains a DER-encoded certificate chain.
-* **Failure Point:** Even when we injected a custom `.pem` certificate, the device detected the absence of a Secure Enclave-signed signature in the payload. The device requires the token to be signed by Apple’s internal private key, rendering server spoofing ineffective via Server-side certificate pinning.
+* **Failure Point:** Even when I injected a custom `.pem` certificate, the device detected the absence of a Secure Enclave-signed signature in the payload. The device requires the token to be signed by Apple’s internal private key, rendering server spoofing ineffective via Server-side certificate pinning.
 
 ---
 
 ## 5. Hardware-Level Forensic Analysis: The Secure Enclave (SEP)
 
-We investigated the hardware-bound enforcement of the Activation Lock by querying the Secure Enclave Processor (SEP) via `ideviceinfo`.
+I investigated the hardware-bound enforcement of the Activation Lock by querying the Secure Enclave Processor (SEP) via `ideviceinfo`.
 
 ### 5.1 SEP Integrity Check
 * **Observation:** When the system attempts to authenticate the activation record, it performs a hardware-backed check.
-* **Forensic Evidence:** We queried the `ActivationState` flag and found it is not stored in the NAND flash file system (which we had access to via our bootrom exploit); it is stored in the SEP’s secure storage (Effaceable Storage).
+* **Forensic Evidence:** I queried the `ActivationState` flag and found it is not stored in the NAND flash file system (which I had access to via our bootrom exploit); it is stored in the SEP’s secure storage (Effaceable Storage).
 * **Implication:** Because this storage is physically isolated from the A8 CPU and the iOS Kernel, our `checkm8` exploit (which runs on the main CPU) has zero read/write access to the master Activation Lock bit.
 
 ### 5.2 The BootROM Chain of Trust (CoT)
-To demonstrate why binary patching and bypasses failed, we mapped the active Chain of Trust:
+To demonstrate why binary patching and bypasses failed, I mapped the active Chain of Trust:
 1. **BootROM:** Immutable, hard-wired *(Compromised via checkm8 flaw)*.
 2. **iBoot:** Validated by BootROM.
 3. **Kernel:** Validated by iBoot.
 4. **AMFI (Apple Mobile File Integrity):** Validated by Kernel.
 
-**Architectural Insight:** We successfully bypassed Step 1 (BootROM), but we were definitively halted at Step 4 (AMFI). Because the chain re-establishes trust at the kernel layer, modifying a user-land binary forces AMFI to recalculate the hash, identify a mismatch against the Apple-signed manifest, and refuse to load the code into memory.
+**Architectural Insight:** I successfully bypassed Step 1 (BootROM), but I were definitively halted at Step 4 (AMFI). Because the chain re-establishes trust at the kernel layer, modifying a user-land binary forces AMFI to recalculate the hash, identify a mismatch against the Apple-signed manifest, and refuse to load the code into memory.
 
 ---
 
@@ -93,7 +93,7 @@ To demonstrate why binary patching and bypasses failed, we mapped the active Cha
 
 ## 7. Forensic Summary & Final Assessment
 
-The iPhone 6 (iOS 12.5.8) architecture employs a robust **Defense-in-Depth** design. Over the course of this audit, we attempted every known methodology for local exploitation and bypass:
+The iPhone 6 (iOS 12.5.8) architecture employs a robust **Defense-in-Depth** design. Over the course of this audit, I attempted every known methodology for local exploitation and bypass:
 
 * **UI Manipulation:** Blocked by Process Watchdogs.
 * **Binary Patching:** Blocked by AMFI/Code Signing.
