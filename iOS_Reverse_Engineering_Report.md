@@ -64,8 +64,8 @@ I investigated the hardware-bound enforcement of the Activation Lock by querying
 
 ### 5.1 SEP Integrity Check
 * **Observation:** When the system attempts to authenticate the activation record, it performs a hardware-backed check.
-* **Forensic Evidence:** I queried the `ActivationState` flag and found it is not stored in the NAND flash file system (which I had access to via our bootrom exploit); it is stored in the SEP’s secure storage (Effaceable Storage).
-* **Implication:** Because this storage is physically isolated from the A8 CPU and the iOS Kernel, our `checkm8` exploit (which runs on the main CPU) has zero read/write access to the master Activation Lock bit.
+* **Forensic Evidence:** I queried the `ActivationState` flag and found it is not stored in the NAND flash file system (which I had access to via my bootrom exploit); it is stored in the SEP’s secure storage (Effaceable Storage).
+* **Implication:** Because this storage is physically isolated from the A8 CPU and the iOS Kernel, the public `checkm8` exploit (which runs on the main CPU) has zero read/write access to the master Activation Lock bit.
 
 ### 5.2 The BootROM Chain of Trust (CoT)
 To demonstrate why binary patching and bypasses failed, I mapped the active Chain of Trust:
