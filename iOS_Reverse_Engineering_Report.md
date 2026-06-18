@@ -74,7 +74,7 @@ To demonstrate why binary patching and bypasses failed, I mapped the active Chai
 3. **Kernel:** Validated by iBoot.
 4. **AMFI (Apple Mobile File Integrity):** Validated by Kernel.
 
-**Architectural Insight:** I successfully bypassed Step 1 (BootROM), but I were definitively halted at Step 4 (AMFI). Because the chain re-establishes trust at the kernel layer, modifying a user-land binary forces AMFI to recalculate the hash, identify a mismatch against the Apple-signed manifest, and refuse to load the code into memory.
+**Architectural Insight:** I successfully bypassed Step 1 (BootROM), but I was definitively halted at Step 4 (AMFI). Because the chain re-establishes trust at the kernel layer, modifying a user-land binary forces AMFI to recalculate the hash, identify a mismatch against the Apple-signed manifest, and refuse to load the code into memory.
 
 ---
 
